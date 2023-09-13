@@ -6,3 +6,4 @@ dist
 poetry.lock
 ***.pdf
 ***.txt
+***.log
