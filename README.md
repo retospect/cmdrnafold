@@ -1,9 +1,12 @@
-[![check](https://github.com/retospect/cmdrnafold/actions/workflows/check.yml/badge.svg)](https://github.com/retospect/cmdrnafold/actions/workflows/check.yml)
 # cmdrnafold - a commandline wrapper library for viennaRNA
 
-A very simple python wrapper around [ViennaRNA Fold](https://www.tbi.univie.ac.at/RNA/ViennaRNA/refman/man/RNAfold.html)
+[![check](https://github.com/retospect/cmdrnafold/actions/workflows/check.yml/badge.svg)](https://github.com/retospect/cmdrnafold/actions/workflows/check.yml)
 
-This is handy commandline wrapper if you can not get the proper [ViennaRNA package](https://pypi.org/project/ViennaRNA/) to run right. 
+A very simple python wrapper around
+[ViennaRNA Fold](https://www.tbi.univie.ac.at/RNA/ViennaRNA/refman/man/RNAfold.html).
+
+This is handy commandline wrapper if you can not get the proper
+[ViennaRNA package](https://pypi.org/project/ViennaRNA/) to run right.
 
 Currently it only provides one interface that is a kind of drop in replacement:
 
