@@ -1,0 +1,143 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Type of version bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: 'Custom version (optional, overrides bump_type)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Install dependencies
+      run: poetry install --no-interaction --with dev
+      
+    - name: Configure git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+    - name: Get current version
+      id: current_version
+      run: |
+        CURRENT_VERSION=$(poetry version -s)
+        echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        echo "Current version: $CURRENT_VERSION"
+        
+    - name: Run tests before version bump
+      run: |
+        echo "Running tests before version bump..."
+        poetry run pytest tests/test_linting.py -v
+        poetry run pytest tests/test_test.py -v -m "not integration" --cov=cmdrnafold --cov-fail-under=90
+        poetry run bandit -r src/ -ll
+        echo "All tests passed!"
+        
+    - name: Bump version (custom)
+      if: ${{ github.event.inputs.custom_version != '' }}
+      run: |
+        echo "Setting custom version: ${{ github.event.inputs.custom_version }}"
+        poetry version ${{ github.event.inputs.custom_version }}
+        
+    - name: Bump version (automatic)
+      if: ${{ github.event.inputs.custom_version == '' }}
+      run: |
+        echo "Bumping ${{ github.event.inputs.bump_type }} version"
+        poetry version ${{ github.event.inputs.bump_type }}
+        
+    - name: Get new version
+      id: new_version
+      run: |
+        NEW_VERSION=$(poetry version -s)
+        echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "New version: $NEW_VERSION"
+        
+    - name: Update __init__.py version
+      run: |
+        NEW_VERSION="${{ steps.new_version.outputs.new-version }}"
+        sed -i "s/__version__ = \".*\"/__version__ = \"$NEW_VERSION\"/" src/cmdrnafold/__init__.py
+        echo "Updated __init__.py version to $NEW_VERSION"
+        
+    - name: Update bumpver current_version
+      run: |
+        NEW_VERSION="${{ steps.new_version.outputs.new-version }}"
+        sed -i "s/current_version = \".*\"/current_version = \"$NEW_VERSION\"/" pyproject.toml
+        echo "Updated bumpver current_version to $NEW_VERSION"
+        
+    - name: Verify version consistency
+      run: |
+        PYPROJECT_VERSION=$(poetry version -s)
+        INIT_VERSION=$(grep '__version__ = ' src/cmdrnafold/__init__.py | sed 's/__version__ = "\(.*\)"/\1/')
+        BUMPVER_VERSION=$(grep 'current_version = ' pyproject.toml | sed 's/current_version = "\(.*\)"/\1/')
+        
+        echo "pyproject.toml version: $PYPROJECT_VERSION"
+        echo "__init__.py version: $INIT_VERSION"
+        echo "bumpver current_version: $BUMPVER_VERSION"
+        
+        if [ "$PYPROJECT_VERSION" != "$INIT_VERSION" ] || [ "$PYPROJECT_VERSION" != "$BUMPVER_VERSION" ]; then
+          echo "Version mismatch detected!"
+          exit 1
+        fi
+        
+        echo "All versions are consistent: $PYPROJECT_VERSION"
+        
+    - name: Run tests after version bump
+      run: |
+        echo "Running tests after version bump..."
+        poetry run pytest tests/test_linting.py::TestDependencyManagement::test_version_consistency -v
+        echo "Version consistency test passed!"
+        
+    - name: Commit and push changes
+      run: |
+        git add pyproject.toml src/cmdrnafold/__init__.py
+        git commit -m "bump version ${{ steps.current_version.outputs.current-version }} -> ${{ steps.new_version.outputs.new-version }}"
+        git push
+        
+    - name: Create summary
+      run: |
+        echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Previous version:** ${{ steps.current_version.outputs.current-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **New version:** ${{ steps.new_version.outputs.new-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Bump type:** ${{ github.event.inputs.bump_type }}" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ github.event.inputs.custom_version }}" != "" ]; then
+          echo "- **Custom version:** ${{ github.event.inputs.custom_version }}" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+        echo "The version has been updated and committed. The auto-release workflow will:" >> $GITHUB_STEP_SUMMARY
+        echo "1. Detect the version change" >> $GITHUB_STEP_SUMMARY
+        echo "2. Run the full test suite" >> $GITHUB_STEP_SUMMARY
+        echo "3. Create a GitHub release" >> $GITHUB_STEP_SUMMARY
+        echo "4. Publish to PyPI" >> $GITHUB_STEP_SUMMARY
