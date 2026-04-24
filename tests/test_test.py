@@ -195,7 +195,13 @@ class TestIntegration:
             assert set(structure) <= set("().")
 
         except RNAFoldError as e:
-            if "Failed to start RNAFold process" in str(e):
+            msg = str(e)
+            if (
+                "Failed to start RNAFold process" in msg
+                or "not recognized" in msg
+                or "command not found" in msg
+                or "No such file" in msg
+            ):
                 pytest.skip("RNAFold not available in test environment")
             else:
                 raise
@@ -214,7 +220,13 @@ class TestIntegration:
             assert set(structure) <= set("().")
 
         except RNAFoldError as e:
-            if "Failed to start RNAFold process" in str(e):
+            msg = str(e)
+            if (
+                "Failed to start RNAFold process" in msg
+                or "not recognized" in msg
+                or "command not found" in msg
+                or "No such file" in msg
+            ):
                 pytest.skip("RNAFold not available in test environment")
             else:
                 raise
