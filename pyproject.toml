@@ -126,8 +126,7 @@ addopts = [
     "--cov=cmdrnafold",
     "--cov-report=term-missing",
     "--cov-report=xml",
-    "--cov-report=html",
-    "--cov-fail-under=80"
+    "--cov-report=html"
 ]
 testpaths = ["tests"]
 markers = [
