@@ -1,0 +1,21 @@
+[flake8]
+max-line-length = 88
+extend-ignore =
+    # Whitespace before ':' (conflicts with black)
+    E203,
+    # Line break before binary operator (conflicts with black)
+    W503,
+    # All docstring rules (flake8-docstrings) — AST-based docstring test in tests/test_linting.py covers this more permissively
+    D,
+    # f-string without placeholders (benign)
+    F541
+per-file-ignores =
+    __init__.py:F401
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .eggs,
+    .venv,
+    .mypy_cache

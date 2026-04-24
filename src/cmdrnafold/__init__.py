@@ -11,31 +11,33 @@ __email__ = "reto@retospect.ch"
 __license__ = "GPL-3.0-or-later"
 
 from .RNA import (
-    RNArunner,
-    SyncRNArunner, 
     RNAFoldError,
+    RNArunner,
+    SyncRNArunner,
     fold_compound,
     fold_compound_sync,
 )
 
+
 # Create a module-level RNA interface for backward compatibility
 class RNA:
     """RNA module interface for backward compatibility."""
-    
+
     @staticmethod
     def fold_compound(sequence: str) -> SyncRNArunner:
         """Create a synchronous fold compound (backward compatible)."""
         return fold_compound_sync(sequence)
 
+
 __all__ = [
     "__version__",
-    "__author__", 
+    "__author__",
     "__email__",
     "__license__",
     "RNA",
     "RNArunner",
     "SyncRNArunner",
-    "RNAFoldError", 
+    "RNAFoldError",
     "fold_compound",
     "fold_compound_sync",
 ]
