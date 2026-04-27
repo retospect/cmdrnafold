@@ -59,7 +59,7 @@ flake8-docstrings = ">=1.7.0,<2.0.0"
 mypy = ">=1.5.0,<2.0.0"
 pre-commit = ">=3.4.0,<4.0.0"
 bandit = ">=1.7.5,<2.0.0"
-types-setuptools = ">=68.0.0" 
+types-setuptools = ">=82.0.0.20260408" 
 
 [tool.bumpver]
 current_version = "0.0.6"
